@@ -247,12 +247,15 @@ The Docker container supports both **stdio** and **HTTP** transport modes, makin
     Use the provided `docker-compose.yml` for production deployments:
 
     ```bash
-    # Start HTTP service
-    docker-compose up -d dokploy-mcp-http
+    # Copy .env.example to .env, set Dokploy credentials and replace
+    # MCP_AUTH_TOKEN with a long random secret, then start the proxy and server.
+    docker compose up -d dokploy-mcp-caddy
 
     # View logs
-    docker-compose logs -f dokploy-mcp-http
+    docker compose logs -f dokploy-mcp-caddy dokploy-mcp-http
     ```
+
+    Caddy publishes the HTTP MCP endpoint on `EXTERNAL_PORT` (default `3000`) and requires `Authorization: Bearer <MCP_AUTH_TOKEN>` on every request. The MCP container itself is only exposed on the internal Compose network. Configure TLS at the public edge before sending the bearer token over an untrusted network.
 
 4.  **MCP Client Configuration:**
 
@@ -307,6 +310,7 @@ The configuration on Windows is slightly different compared to Linux or macOS. U
 |----------|----------|-------------|
 | `DOKPLOY_URL` | Yes | Your Dokploy server URL (e.g., `https://your-dokploy-server.com`) |
 | `DOKPLOY_API_KEY` | Yes | Your Dokploy API authentication token |
+| `MCP_AUTH_TOKEN` | Required for Docker Compose HTTP | Bearer token required by the Caddy proxy for HTTP MCP requests. Use a long random value and configure the MCP client to send it in the `Authorization` header. |
 | `DOKPLOY_CUSTOM_HEADERS` | No | JSON object of additional upstream request headers. Header names and values must be strings. Reserved headers cannot be set here: `x-api-key`, `content-type`, `accept`. |
 | `DOKPLOY_TOOL_PRESET` | No | Predefined toolset to load: `all` (default), `minimal`, `core`, `deploy`, `databases`, or `git`. Useful for clients/providers that struggle with very large tool lists. |
 | `DOKPLOY_ENABLED_TAGS` | No | Comma-separated list of tags to filter which tools are loaded (e.g., `project,application,postgres`) |
